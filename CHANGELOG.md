@@ -6,10 +6,15 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Geändert
+
+- CI läuft nur noch über Gitea Actions; der GitHub-Workflow und der `github`-Remote
+  entfallen. README-Badge zeigt auf Gitea
+
 ### Behoben
 
 - CI: Test „fehlendes jq" legt `smartctl`/`lsblk` als Stubs an, statt Symlinks auf lokal
-  installierte Programme zu setzen – auf GitHub Actions (ohne smartmontools) schlug der
+  installierte Programme zu setzen – auf einem Runner ohne smartmontools schlug der
   Test fehl und meldete fälschlich das fehlende `smartctl`
 - `smartinfo -l` prüft jetzt `jq` und meldet die fehlende Abhängigkeit, statt
   „Keine Festplatten gefunden." auszugeben
