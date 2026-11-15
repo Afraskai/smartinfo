@@ -20,6 +20,11 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
   Test fehl und meldete fälschlich das fehlende `smartctl`
 - `smartinfo -l` prüft jetzt `jq` und meldet die fehlende Abhängigkeit, statt
   „Keine Festplatten gefunden." auszugeben
+- `install.sh --uninstall` nennt eine Kopie an anderer Stelle, wenn das Ziel nicht
+  zur Installation passt (etwa mit `--system` installiert, ohne `--system` entfernt);
+  vorher blieb sie unbemerkt liegen und die Meldung suggerierte Erfolg
+- `make uninstall` meldet „nicht installiert", statt auch ohne vorhandene Datei
+  „entfernt" auszugeben
 - Abhängigkeitsprüfung in `require_cmd` zusammengefasst (`smartctl`, `jq`, `lsblk`)
 - README: `mkdir -p ~/.local/bin` in die Ein-Zeilen-Installation aufgenommen – ohne das
   Verzeichnis bricht `curl -o` mit `curl: (23) client returned ERROR on write` ab

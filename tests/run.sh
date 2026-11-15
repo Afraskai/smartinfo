@@ -127,5 +127,43 @@ else
     nok "Ende-zu-Ende mit Stub-smartctl (rc=$rc)"
 fi
 
+# 10. Installer installiert und entfernt in einem Wegwerf-Ziel
+tmpdir=$(mktemp -d)
+SMARTINFO_LANG=de ./install.sh --prefix "$tmpdir" >/dev/null 2>&1
+installed=0; [[ -x $tmpdir/bin/smartinfo ]] && installed=1
+SMARTINFO_LANG=de ./install.sh --prefix "$tmpdir" --uninstall >/dev/null 2>&1
+gone=0; [[ ! -e $tmpdir/bin/smartinfo ]] && gone=1
+rm -rf "$tmpdir"
+if ((installed == 1 && gone == 1)); then
+    ok "install.sh installieren und entfernen"
+else
+    nok "install.sh installieren und entfernen (installed=$installed gone=$gone)"
+fi
+
+# 11. Deinstallation ohne Installation meldet das und endet mit 0
+tmpdir=$(mktemp -d)
+out=$(HOME="$tmpdir" SMARTINFO_LANG=de ./install.sh --prefix "$tmpdir/leer" --uninstall 2>&1)
+rc=$?
+rm -rf "$tmpdir"
+if [[ $rc -eq 0 && $out == *"Nicht gefunden"* ]]; then
+    ok "Deinstallation ohne Installation -> Hinweis"
+else
+    nok "Deinstallation ohne Installation -> Hinweis (rc=$rc, out=$out)"
+fi
+
+# 12. Falsches Ziel entfernt nichts Fremdes, nennt aber die andere Fundstelle
+tmpdir=$(mktemp -d)
+mkdir -p "$tmpdir/.local/bin" "$tmpdir/ziel/bin"
+cp smartinfo "$tmpdir/.local/bin/smartinfo"
+out=$(HOME="$tmpdir" SMARTINFO_LANG=de ./install.sh --prefix "$tmpdir/ziel" --uninstall 2>&1)
+rc=$?
+still_there=0; [[ -e $tmpdir/.local/bin/smartinfo ]] && still_there=1
+rm -rf "$tmpdir"
+if [[ $rc -eq 0 && $still_there -eq 1 && $out == *"Noch vorhanden"* ]]; then
+    ok "Deinstallation nennt andere Fundstelle"
+else
+    nok "Deinstallation nennt andere Fundstelle (rc=$rc, still=$still_there, out=$out)"
+fi
+
 printf '\n%d bestanden, %d fehlgeschlagen\n' "$pass" "$fail"
 ((fail == 0))

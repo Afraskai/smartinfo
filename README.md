@@ -183,12 +183,18 @@ SMARTINFO_SUDO=doas smartinfo
 ## Deinstallation
 
 ```bash
-./install.sh --uninstall
-# oder
-make uninstall
-# oder einfach
-rm ~/.local/bin/smartinfo
+./install.sh --uninstall           # ~/.local/bin
+./install.sh --system --uninstall  # /usr/local/bin (mit sudo)
+make uninstall                     # Ziel aus dem Makefile, Default ~/.local
+rm ~/.local/bin/smartinfo          # von Hand
 ```
+
+Das Ziel muss zur Installation passen: wer mit `--system` installiert hat, muss
+`--system` auch beim Entfernen angeben. Der Installer weist darauf hin, wenn er
+das Programm an einer anderen Stelle findet.
+
+Sonst bleibt nichts zurück: `smartinfo` legt keine Konfiguration, keinen Cache
+und keine systemd-Unit an.
 
 ---
 

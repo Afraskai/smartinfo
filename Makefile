@@ -21,8 +21,12 @@ install:
 	@echo "installiert: $(DESTDIR)$(BINDIR)/smartinfo"
 
 uninstall:
-	rm -f "$(DESTDIR)$(BINDIR)/smartinfo"
-	@echo "entfernt: $(DESTDIR)$(BINDIR)/smartinfo"
+	@if [ -e "$(DESTDIR)$(BINDIR)/smartinfo" ]; then \
+		rm -f "$(DESTDIR)$(BINDIR)/smartinfo"; \
+		echo "entfernt: $(DESTDIR)$(BINDIR)/smartinfo"; \
+	else \
+		echo "nicht installiert: $(DESTDIR)$(BINDIR)/smartinfo"; \
+	fi
 
 test:
 	./tests/run.sh

@@ -34,6 +34,8 @@ msg() {
                 done)        echo "Fertig! Starte mit:" ;;
                 uninstalled) echo "Entfernt:" ;;
                 notfound)    echo "Nicht gefunden (nichts zu tun):" ;;
+                elsewhere)   echo "Noch vorhanden (Ziel passt nicht zur Installation):" ;;
+                elsewhere_cmd) echo "  entfernen mit:" ;;
                 pathtip)     echo "Hinweis: $BINDIR ist nicht in deinem PATH. Ergänze in ~/.bashrc oder ~/.zshrc:" ;;
                 deps)        echo "Optionale Abhaengigkeiten pruefen:" ;;
                 missing)     echo "  fehlt: $2" ;;
@@ -51,6 +53,8 @@ msg() {
                 done)        echo "Done! Start with:" ;;
                 uninstalled) echo "Removed:" ;;
                 notfound)    echo "Not found (nothing to do):" ;;
+                elsewhere)   echo "Still present (target does not match the installation):" ;;
+                elsewhere_cmd) echo "  remove with:" ;;
                 pathtip)     echo "Note: $BINDIR is not in your PATH. Add to ~/.bashrc or ~/.zshrc:" ;;
                 deps)        echo "Checking optional dependencies:" ;;
                 missing)     echo "  missing: $2" ;;
@@ -125,6 +129,18 @@ if [[ $MODE == uninstall ]]; then
     else
         printf '  %s %s\n' "$(msg notfound)" "$target"
     fi
+
+    # Weitere Fundstellen melden: wer mit --system installiert hat und ohne
+    # --system deinstalliert, wuerde sonst annehmen, das Programm sei weg.
+    for other in /usr/local/bin/smartinfo "$HOME/.local/bin/smartinfo"; do
+        [[ $other == "$target" || ! -e $other ]] && continue
+        printf '  %s %s\n' "$(msg elsewhere)" "$other"
+        printf '%s\n' "$(msg elsewhere_cmd)"
+        case $other in
+            /usr/local/bin/*) echo "    ./install.sh --system --uninstall" ;;
+            *)                echo "    ./install.sh --uninstall" ;;
+        esac
+    done
     exit 0
 fi
 

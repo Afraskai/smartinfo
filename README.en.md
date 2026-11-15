@@ -158,12 +158,18 @@ SMARTINFO_SUDO=doas smartinfo   # if you prefer doas
 ## Uninstall
 
 ```bash
-./install.sh --uninstall
-# or
-make uninstall
-# or simply
-rm ~/.local/bin/smartinfo
+./install.sh --uninstall           # ~/.local/bin
+./install.sh --system --uninstall  # /usr/local/bin (uses sudo)
+make uninstall                     # target from the Makefile, default ~/.local
+rm ~/.local/bin/smartinfo          # by hand
 ```
+
+The target has to match the installation: if you installed with `--system`, pass
+`--system` when removing as well. The installer points out a copy it finds at a
+different location.
+
+Nothing else is left behind: `smartinfo` creates no configuration, no cache and
+no systemd unit.
 
 ---
 
