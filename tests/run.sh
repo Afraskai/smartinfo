@@ -165,5 +165,28 @@ else
     nok "Deinstallation nennt andere Fundstelle (rc=$rc, still=$still_there, out=$out)"
 fi
 
+# 13. Meldung von smartctl selbst (smartctl.messages) wird angezeigt
+#     Ohne sie bleibt ein fehlgeschlagenes Oeffnen des Geraets unerklaert.
+out=$(render de tests/fixtures/no-device.json)
+if [[ $out == *"No such device"* ]]; then
+    ok "smartctl-Meldung wird angezeigt"
+else
+    nok "smartctl-Meldung wird angezeigt (war: $out)"
+fi
+
+# 14. Nicht lesbares Geraet -> Exitcode 1 statt faelschlich 0
+tmpbin=$(mktemp -d)
+printf '#!/bin/sh\ncat %s\n' "$PWD/tests/fixtures/no-device.json" >"$tmpbin/smartctl"
+printf '#!/bin/sh\nexec "$@"\n' >"$tmpbin/fakesudo"
+chmod +x "$tmpbin/smartctl" "$tmpbin/fakesudo"
+PATH="$tmpbin:$PATH" SMARTINFO_SUDO="$tmpbin/fakesudo" ./smartinfo /dev/test >/dev/null 2>&1
+rc=$?
+rm -rf "$tmpbin"
+if [[ $rc -eq 1 ]]; then
+    ok "nicht lesbares Geraet -> Exitcode 1"
+else
+    nok "nicht lesbares Geraet -> Exitcode 1 (rc=$rc)"
+fi
+
 printf '\n%d bestanden, %d fehlgeschlagen\n' "$pass" "$fail"
 ((fail == 0))

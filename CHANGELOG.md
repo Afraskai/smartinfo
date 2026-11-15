@@ -15,6 +15,12 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Behoben
 
+- `smartctl`-Meldungen aus `.smartctl.messages` werden angezeigt. Vorher wurde nur
+  `.messages` gelesen, sodass ein fehlgeschlagenes Öffnen des Geräts (etwa in einem
+  Container ohne `/dev`-Knoten) unerklärt blieb und die Ausgabe nur „Status UNBEKANNT"
+  zeigte
+- Ein Gerät, dessen SMART-Status nicht gelesen werden konnte, führt zu Exitcode 1
+  statt fälschlich 0
 - CI: Test „fehlendes jq" legt `smartctl`/`lsblk` als Stubs an, statt Symlinks auf lokal
   installierte Programme zu setzen – auf einem Runner ohne smartmontools schlug der
   Test fehl und meldete fälschlich das fehlende `smartctl`

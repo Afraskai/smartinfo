@@ -337,9 +337,12 @@ render_device() {
     fi
 
     local msg
+    # smartctl legt eigene Meldungen unter .smartctl.messages ab, das Geraet
+    # seine unter .messages. Beide anzeigen -- sonst bleibt z. B. ein
+    # fehlgeschlagenes Oeffnen des Geraets unerklaert.
     while IFS= read -r msg; do
         [[ -n $msg ]] && printf '  %s! %s%s\n' "$YELLOW" "$msg" "$NC"
-    done < <(jq -r '.messages[]?.string // empty' <<<"$json" 2>/dev/null)
+    done < <(jq -r '(.smartctl.messages // [])[]?.string, (.messages // [])[]?.string' <<<"$json" 2>/dev/null)
 
     if [[ ${QUIET:-0} -eq 0 ]] && jq -e '.ata_smart_attributes.table' >/dev/null 2>&1 <<<"$json"; then
         printf '  %s%-4s %-30s %4s %5s %4s  %s%s\n' "$BOLD" \
@@ -444,6 +447,13 @@ main() {
             printf '%s\n' "$json"
         else
             render_device "$dev" "$json"
+        fi
+
+        # Kein SMART-Status gelesen (z. B. Geraet im Container nicht vorhanden):
+        # das ist ein Fehler, kein "unbekannter Zustand".
+        if jq -e '(.smart_status.passed == null) and ((.smartctl.exit_status // 0) != 0)' \
+             >/dev/null 2>&1 <<<"$json"; then
+            rc=1
         fi
     done
 
