@@ -1,6 +1,5 @@
 # smartinfo
 
-[![CI](http://192.168.0.95:3000/grossegurke/smartinfo/actions/workflows/ci.yml/badge.svg)](http://192.168.0.95:3000/grossegurke/smartinfo/actions/workflows/ci.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
 ![Bash](https://img.shields.io/badge/bash-4%2B-4EAA25?logo=gnubash&logoColor=white)
 
