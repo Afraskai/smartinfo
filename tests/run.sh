@@ -82,10 +82,13 @@ else
 fi
 
 # 8. Fehlende Abhaengigkeit wird gemeldet (smartctl vorhanden, jq nicht)
+#    smartctl/lsblk als Stubs: der Test darf nicht davon abhaengen, ob
+#    smartmontools auf dem Runner installiert ist (CI hat es nicht).
 tmpbin=$(mktemp -d)
 ln -s "$(command -v bash)" "$tmpbin/bash"
-ln -s "$(command -v smartctl)" "$tmpbin/smartctl"
-ln -s "$(command -v lsblk)" "$tmpbin/lsblk"
+printf '#!/bin/sh\nexit 0\n' >"$tmpbin/smartctl"
+printf '#!/bin/sh\nexit 0\n' >"$tmpbin/lsblk"
+chmod +x "$tmpbin/smartctl" "$tmpbin/lsblk"
 out=$(PATH="$tmpbin" bash smartinfo /dev/null 2>&1)
 rc=$?
 rm -rf "$tmpbin"
@@ -93,6 +96,20 @@ if [[ $rc -eq 1 && $out == *jq* ]]; then
     ok "fehlendes jq -> Hinweis"
 else
     nok "fehlendes jq -> Hinweis (rc=$rc, out=$out)"
+fi
+
+# 8b. Auch die Laufwerksliste (-l) braucht jq - Hinweis statt "keine Laufwerke"
+tmpbin=$(mktemp -d)
+ln -s "$(command -v bash)" "$tmpbin/bash"
+printf '#!/bin/sh\nexit 0\n' >"$tmpbin/lsblk"
+chmod +x "$tmpbin/lsblk"
+out=$(PATH="$tmpbin" bash smartinfo -l 2>&1)
+rc=$?
+rm -rf "$tmpbin"
+if [[ $rc -eq 1 && $out == *jq* ]]; then
+    ok "fehlendes jq bei -l -> Hinweis"
+else
+    nok "fehlendes jq bei -l -> Hinweis (rc=$rc, out=$out)"
 fi
 
 # 9. Kompletter Ablauf mit Stub-smartctl und Stub-sudo (kein Root noetig)

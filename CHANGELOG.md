@@ -8,6 +8,12 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Behoben
 
+- CI: Test „fehlendes jq" legt `smartctl`/`lsblk` als Stubs an, statt Symlinks auf lokal
+  installierte Programme zu setzen – auf GitHub Actions (ohne smartmontools) schlug der
+  Test fehl und meldete fälschlich das fehlende `smartctl`
+- `smartinfo -l` prüft jetzt `jq` und meldet die fehlende Abhängigkeit, statt
+  „Keine Festplatten gefunden." auszugeben
+- Abhängigkeitsprüfung in `require_cmd` zusammengefasst (`smartctl`, `jq`, `lsblk`)
 - README: `mkdir -p ~/.local/bin` in die Ein-Zeilen-Installation aufgenommen – ohne das
   Verzeichnis bricht `curl -o` mit `curl: (23) client returned ERROR on write` ab
 - README: eigener Hinweis auf `/usr/local/bin` als Installationsziel auf Servern
