@@ -34,15 +34,29 @@ Attributtabelle mit Warnfarben.
 
 ## Installation
 
-### Variante 1: eine Zeile (empfohlen)
+### Variante 1: zwei Zeilen (empfohlen)
 
 ```bash
+mkdir -p ~/.local/bin
 curl -fsSL https://raw.githubusercontent.com/Afraskai/smartinfo/main/smartinfo \
   -o ~/.local/bin/smartinfo && chmod +x ~/.local/bin/smartinfo
 ```
 
+`mkdir -p` gehört dazu: `curl -o` legt keine Verzeichnisse an. Fehlt `~/.local/bin`,
+bricht der Download mit `curl: (23) client returned ERROR on write` ab.
+
 `~/.local/bin` ist bei den meisten Distributionen bereits im `PATH`.
 Falls nicht: `export PATH="$HOME/.local/bin:$PATH"` in die `~/.bashrc` / `~/.zshrc`.
+
+**Auf Servern** (Proxmox, Debian/Ubuntu als `root`) ist `~/.local/bin` meist **nicht**
+im `PATH`. Dort direkt nach `/usr/local/bin` installieren:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Afraskai/smartinfo/main/smartinfo \
+  -o /usr/local/bin/smartinfo && chmod +x /usr/local/bin/smartinfo
+```
+
+Alternativ Variante 2 mit `--system` – der Installer legt alle Verzeichnisse selbst an.
 
 ### Variante 2: mit Installer
 
@@ -156,6 +170,8 @@ SMARTINFO_SUDO=doas smartinfo
 
 | Problem | Lösung |
 |---|---|
+| `curl: (23) … ERROR on write` | Zielverzeichnis fehlt → `mkdir -p ~/.local/bin`, danach erneut herunterladen |
+| `smartinfo: command not found` nach `~/.local/bin`-Installation | Verzeichnis nicht im `PATH` (typisch als `root`) → nach `/usr/local/bin` installieren oder `PATH` ergänzen |
 | `Konnte /dev/sdX nicht lesen` | Rechte fehlen → mit `sudo` ausführen oder `SMARTINFO_SUDO` setzen |
 | USB-Platte liefert keine Daten | `smartinfo -d sat /dev/sdb` (oder `-d usbjmicron`, `-d usbcypress`) |
 | „jq fehlt“ | `sudo pacman -S jq` / `sudo apt install jq` |

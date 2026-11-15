@@ -36,12 +36,26 @@ power-on time, wear and – for SATA drives – the full attribute table with wa
 ### One-liner (recommended)
 
 ```bash
+mkdir -p ~/.local/bin
 curl -fsSL https://raw.githubusercontent.com/Afraskai/smartinfo/main/smartinfo \
   -o ~/.local/bin/smartinfo && chmod +x ~/.local/bin/smartinfo
 ```
 
+The `mkdir -p` matters: `curl -o` does not create directories. If `~/.local/bin` is
+missing, the download fails with `curl: (23) client returned ERROR on write`.
+
 `~/.local/bin` is in `PATH` on most distributions. If not, add
 `export PATH="$HOME/.local/bin:$PATH"` to your `~/.bashrc` / `~/.zshrc`.
+
+**On servers** (Proxmox, Debian/Ubuntu as `root`), `~/.local/bin` is usually **not** in
+`PATH`. Install to `/usr/local/bin` directly instead:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Afraskai/smartinfo/main/smartinfo \
+  -o /usr/local/bin/smartinfo && chmod +x /usr/local/bin/smartinfo
+```
+
+Or use the installer with `--system` (option 2) – it creates the directories itself.
 
 ### With the installer
 
@@ -131,6 +145,8 @@ SMARTINFO_SUDO=doas smartinfo   # if you prefer doas
 
 | Problem | Fix |
 |---|---|
+| `curl: (23) … ERROR on write` | target directory missing → `mkdir -p ~/.local/bin`, then download again |
+| `smartinfo: command not found` after installing to `~/.local/bin` | directory not in `PATH` (typical for `root`) → install to `/usr/local/bin` or extend `PATH` |
 | `Could not read /dev/sdX` | missing privileges → run with sudo or set `SMARTINFO_SUDO` |
 | USB drive returns nothing | `smartinfo -d sat /dev/sdb` (also `usbjmicron`, `usbcypress`, …) |
 | “jq is missing” | `sudo pacman -S jq` / `sudo apt install jq` |

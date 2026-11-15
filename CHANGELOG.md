@@ -4,6 +4,16 @@ Alle nennenswerten Änderungen an diesem Projekt.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [Unreleased]
+
+### Behoben
+
+- README: `mkdir -p ~/.local/bin` in die Ein-Zeilen-Installation aufgenommen – ohne das
+  Verzeichnis bricht `curl -o` mit `curl: (23) client returned ERROR on write` ab
+- README: eigener Hinweis auf `/usr/local/bin` als Installationsziel auf Servern
+  (z. B. Proxmox als `root`), wo `~/.local/bin` nicht im `PATH` liegt
+- README: beide Fälle in der Problembehandlung ergänzt
+
 ## [1.0.0] - 2026-11-15
 
 ### Hinzugefügt
