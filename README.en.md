@@ -1,6 +1,6 @@
 # smartinfo
 
-[![CI](http://192.168.0.95:3000/grossegurke/smartinfo/actions/workflows/ci.yml/badge.svg)](http://192.168.0.95:3000/grossegurke/smartinfo/actions/workflows/ci.yml)
+[![CI](https://github.com/Afraskai/smartinfo/actions/workflows/ci.yml/badge.svg)](https://github.com/Afraskai/smartinfo/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Bash](https://img.shields.io/badge/bash-4%2B-4EAA25?logo=gnubash&logoColor=white)
 
@@ -178,7 +178,8 @@ make check     # both
 
 Tests render fixed JSON fixtures (`tests/fixtures/`) and compare them against
 reference output (`tests/expected/`) so formatting and both languages stay stable.
-CI runs on Gitea Actions (`.gitea/workflows/ci.yml`).
+CI runs on GitHub Actions; `.gitea/workflows/ci.yml` is kept for a self-hosted
+`act_runner`.
 
 ## License
 

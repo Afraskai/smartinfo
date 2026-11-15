@@ -8,8 +8,9 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Geändert
 
-- CI läuft nur noch über Gitea Actions; der GitHub-Workflow und der `github`-Remote
-  entfallen. README-Badge zeigt auf Gitea
+- CI läuft über GitHub Actions, der README-Badge zeigt auf GitHub.
+  `.gitea/workflows/ci.yml` bleibt für einen eigenen `act_runner` erhalten
+- `github`-Remote aus dem Arbeits-Repo entfernt; Push nach GitHub erfolgt per URL
 
 ### Behoben
 
