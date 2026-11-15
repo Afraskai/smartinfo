@@ -1,0 +1,19 @@
+
+/dev/test  SSDPEKKF256G8 NVMe INTEL 256GB
+  Status              WARNING
+  ! Reliability degraded (critical warning bit 2)
+  Capacity            256.1 GB
+  Interface           NVMe
+  Firmware            D05N
+  Serial              BTHH83161X02256B
+  Temperature         36 °C
+  Power-on time       22322 h (2 years, 200 days)
+  Power cycles        2300
+  Wear                160 % (percentage used)
+  ! Wear beyond rated endurance: 160 %
+  Spare               100 % (threshold 10 %)
+  Read                54.1 TB
+  Written             23.7 TB
+  Unsafe shutdowns    96
+  Media errors        0
+  Error log           0

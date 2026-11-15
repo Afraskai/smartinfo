@@ -40,8 +40,14 @@ set_lang() {
                 [wear]='Abnutzung' [spare]='Reserve' [read]='Gelesen'
                 [written]='Geschrieben' [unsafe]='Unsichere Stopps'
                 [media]='Media Errors' [errlog]='Fehler-Log'
-                [ok]='GUT' [fail]='FEHLER' [unknown]='UNBEKANNT'
-                [critical]='WARNUNG (Critical Warning: %s)'
+                [ok]='GUT' [fail]='FEHLER' [unknown]='UNBEKANNT' [warn]='WARNUNG'
+                [cw_spare]='Reserve unter Schwelle (Critical Warning Bit 0)'
+                [cw_temp]='Temperatur ausserhalb des Grenzwerts (Critical Warning Bit 1)'
+                [cw_reliability]='Zuverlässigkeit herabgesetzt (Critical Warning Bit 2)'
+                [cw_readonly]='Medium ist schreibgeschützt (Critical Warning Bit 3)'
+                [cw_backup]='Puffer-Backup ausgefallen (Critical Warning Bit 4)'
+                [cw_unknown]='Weitere Critical-Warning-Bits gesetzt (Rohwert %s)'
+                [wear_over]='Abnutzung über Nennlebensdauer: %s %%'
                 [id]='ID' [attribute]='Attribut' [value]='VAL' [worst]='WORST'
                 [threshold]='THR' [raw]='Rohwert'
                 [spare_threshold]='Schwelle %s %%'
@@ -69,8 +75,14 @@ set_lang() {
                 [wear]='Wear' [spare]='Spare' [read]='Read'
                 [written]='Written' [unsafe]='Unsafe shutdowns'
                 [media]='Media errors' [errlog]='Error log'
-                [ok]='GOOD' [fail]='FAILED' [unknown]='UNKNOWN'
-                [critical]='WARNING (critical warning: %s)'
+                [ok]='GOOD' [fail]='FAILED' [unknown]='UNKNOWN' [warn]='WARNING'
+                [cw_spare]='Available spare below threshold (critical warning bit 0)'
+                [cw_temp]='Temperature outside the threshold (critical warning bit 1)'
+                [cw_reliability]='Reliability degraded (critical warning bit 2)'
+                [cw_readonly]='Media is read-only (critical warning bit 3)'
+                [cw_backup]='Volatile memory backup failed (critical warning bit 4)'
+                [cw_unknown]='Further critical warning bits set (raw value %s)'
+                [wear_over]='Wear beyond rated endurance: %s %%'
                 [id]='ID' [attribute]='Attribute' [value]='VAL' [worst]='WORST'
                 [threshold]='THR' [raw]='Raw value'
                 [spare_threshold]='threshold %s %%'
@@ -273,7 +285,9 @@ render_device() {
           fw:        (.firmware_version // .scsi_revision // ""),
           proto:     (.device.protocol // .device.type // ""),
           cap:       (.user_capacity.bytes // ""),
-          passed:    (.smart_status.passed // ""),
+          # Nicht "// """: jq behandelt false wie einen leeren Wert, dadurch
+          # ginge ausgerechnet der Status "FAILED" verloren.
+          passed:    (if .smart_status.passed == null then "" else (.smart_status.passed | tostring) end),
           temp:      (.temperature.current // .nvme_smart_health_information_log.temperature // ""),
           poh:       (.power_on_time.hours // ""),
           pcyc:      (.power_cycle_count // ""),
@@ -301,12 +315,31 @@ render_device() {
     else
         status=${T[unknown]}; status_color=$YELLOW
     fi
-    if [[ -n ${F[crit]:-} && ${F[crit]} != 0 ]]; then
-        status=$(fmt critical "${F[crit]}")
-        status_color=$YELLOW
+
+    # Critical Warning ist ein Bitfeld. Jedes gesetzte Bit einzeln benennen,
+    # sonst muss man fuer "4" die NVMe-Spezifikation nachschlagen.
+    local -a notes=()
+    if [[ ${F[crit]:-} =~ ^[0-9]+$ ]] && (( F[crit] != 0 )); then
+        # Ein bereits fehlgeschlagenes Laufwerk bleibt rot, nicht gelb.
+        if [[ ${F[passed]:-} != false ]]; then
+            status=${T[warn]}
+            status_color=$YELLOW
+        fi
+        (( F[crit] & 1 ))  && notes+=("${T[cw_spare]}")
+        (( F[crit] & 2 ))  && notes+=("${T[cw_temp]}")
+        (( F[crit] & 4 ))  && notes+=("${T[cw_reliability]}")
+        (( F[crit] & 8 ))  && notes+=("${T[cw_readonly]}")
+        (( F[crit] & 16 )) && notes+=("${T[cw_backup]}")
+        (( F[crit] & ~31 )) && notes+=("$(fmt cw_unknown "${F[crit]}")")
     fi
 
     row "${T[status]}" "${status_color}${status}${NC}"
+    if ((${#notes[@]})); then
+        local note
+        for note in "${notes[@]}"; do
+            printf '  %s! %s%s\n' "$YELLOW" "$note" "$NC"
+        done
+    fi
     [[ -n $cap ]] && row "${T[capacity]}" "$cap"
     [[ -n ${F[proto]:-} ]] && row "${T[interface]}" "${F[proto]}"
     [[ -n ${F[fw]:-} ]] && row "${T[firmware]}" "${F[fw]}"
@@ -328,6 +361,9 @@ render_device() {
         (( ${F[used]:-0} >= 70 && ${F[used]:-0} < 90 )) && uc=$YELLOW
 
         row "${T[wear]}" "${uc}${F[used]:-0} %${NC} (${T[wear_note]})"
+        if [[ ${F[used]:-} =~ ^[0-9]+$ ]] && (( F[used] > 100 )); then
+            printf '  %s! %s%s\n' "$YELLOW" "$(fmt wear_over "${F[used]}")" "$NC"
+        fi
         row "${T[spare]}" "${F[spare]:-?} % ($(fmt spare_threshold "${F[spare_thr]:-?}"))"
         row "${T[read]}" "$(human_size $(( F[rd] * 512000 )))"
         row "${T[written]}" "$(human_size $(( ${F[wr]:-0} * 512000 )))"

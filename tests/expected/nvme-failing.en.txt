@@ -1,6 +1,7 @@
 
 /dev/test  Samsung SSD 980 PRO 1TB
-  Status              WARNING (critical warning: 4)
+  Status              FAILED
+  ! Reliability degraded (critical warning bit 2)
   Capacity            1.0 TB
   Interface           NVMe
   Firmware            5B2QGXA7

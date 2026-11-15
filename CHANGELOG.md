@@ -8,6 +8,9 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Geändert
 
+- NVMe-`Critical Warning` wird nicht mehr als Rohwert („Critical Warning: 4") angezeigt,
+  sondern Bit für Bit benannt: Reserve, Temperatur, Zuverlässigkeit, Schreibschutz,
+  Puffer-Backup. Abnutzung über der Nennlebensdauer erhält einen eigenen Hinweis
 - CI läuft nur noch über Gitea Actions auf einem eigenen `act_runner`; der
   GitHub-Workflow ist entfernt. Der CI-Badge ist aus den READMEs entfernt, weil
   er nur eine interne Adresse angezeigt hätte
@@ -15,6 +18,10 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Behoben
 
+- Der SMART-Status „FAILED" wurde nie angezeigt: `jq` behandelt `false` wie einen leeren
+  Wert, daher verschluckte `.smart_status.passed // ""` genau diesen Fall. Ein
+  fehlgeschlagenes Laufwerk erschien als „UNBEKANNT" bzw. nur als gelbe Warnung statt
+  als FEHLER
 - `smartctl`-Meldungen aus `.smartctl.messages` werden angezeigt. Vorher wurde nur
   `.messages` gelesen, sodass ein fehlgeschlagenes Öffnen des Geräts (etwa in einem
   Container ohne `/dev`-Knoten) unerklärt blieb und die Ausgabe nur „Status UNBEKANNT"

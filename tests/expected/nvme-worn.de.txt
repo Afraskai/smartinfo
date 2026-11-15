@@ -1,0 +1,19 @@
+
+/dev/test  SSDPEKKF256G8 NVMe INTEL 256GB
+  Status              WARNUNG
+  ! Zuverlässigkeit herabgesetzt (Critical Warning Bit 2)
+  Kapazität          256.1 GB
+  Anschluss           NVMe
+  Firmware            D05N
+  Seriennummer        BTHH83161X02256B
+  Temperatur          36 °C
+  Laufzeit            22322 h (2 Jahre, 200 Tage)
+  Einschaltungen      2300
+  Abnutzung           160 % (Percentage Used)
+  ! Abnutzung über Nennlebensdauer: 160 %
+  Reserve             100 % (Schwelle 10 %)
+  Gelesen             54.1 TB
+  Geschrieben         23.7 TB
+  Unsichere Stopps    96
+  Media Errors        0
+  Fehler-Log          0

@@ -44,7 +44,7 @@ else
 fi
 
 # 4. Ausgabe gegen Referenzdateien
-for fixture in nvme-healthy sata-warning nvme-failing; do
+for fixture in nvme-healthy sata-warning nvme-failing nvme-worn; do
     for lang in de en; do
         expected="tests/expected/${fixture}.${lang}.txt"
         if diff -u "$expected" <(render "$lang" "tests/fixtures/${fixture}.json") >/tmp/smartinfo-diff.$$ 2>&1; then
@@ -186,6 +186,24 @@ if [[ $rc -eq 1 ]]; then
     ok "nicht lesbares Geraet -> Exitcode 1"
 else
     nok "nicht lesbares Geraet -> Exitcode 1 (rc=$rc)"
+fi
+
+# 15. Jedes gesetzte Critical-Warning-Bit wird im Klartext benannt
+out=$(render de <(printf '%s' '{"smart_status":{"passed":true},"nvme_smart_health_information_log":{"critical_warning":63}}'))
+if [[ $out == *"Reserve unter Schwelle"* && $out == *"Zuverlässigkeit herabgesetzt"* &&
+      $out == *"schreibgeschützt"* && $out == *"Weitere Critical-Warning-Bits"* ]]; then
+    ok "Critical-Warning-Bits werden benannt"
+else
+    nok "Critical-Warning-Bits werden benannt (war: $out)"
+fi
+
+# 16. SMART-Status FAILED erscheint als FEHLER
+#     jq behandelt false wie einen leeren Wert, ".passed // \"\"" verschluckte ihn.
+out=$(render de <(printf '%s' '{"model_name":"Test","smart_status":{"passed":false}}'))
+if [[ $out == *"FEHLER"* ]]; then
+    ok "SMART-Status FAILED -> FEHLER"
+else
+    nok "SMART-Status FAILED -> FEHLER (war: $out)"
 fi
 
 printf '\n%d bestanden, %d fehlgeschlagen\n' "$pass" "$fail"
