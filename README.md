@@ -1,6 +1,6 @@
 # smartinfo
 
-[![CI](https://github.com/Afraskai/smartinfo/actions/workflows/ci.yml/badge.svg)](https://github.com/Afraskai/smartinfo/actions/workflows/ci.yml)
+[![CI](http://192.168.0.95:3000/grossegurke/smartinfo/actions/workflows/ci.yml/badge.svg)](http://192.168.0.95:3000/grossegurke/smartinfo/actions/workflows/ci.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
 ![Bash](https://img.shields.io/badge/bash-4%2B-4EAA25?logo=gnubash&logoColor=white)
 
@@ -203,8 +203,7 @@ make check     # beides
 
 Die Tests rendern feste JSON-Fixtures (`tests/fixtures/`) und vergleichen mit
 Referenzausgaben (`tests/expected/`) – so bleiben Formatierung und beide Sprachen stabil.
-CI läuft über GitHub Actions; `.gitea/workflows/ci.yml` liegt für einen eigenen
-`act_runner` bereit.
+CI läuft über Gitea Actions auf einem eigenen Runner (`.gitea/workflows/ci.yml`).
 
 ## Lizenz
 
