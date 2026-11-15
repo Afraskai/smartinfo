@@ -1,0 +1,33 @@
+{
+  "json_format_version": [1, 0],
+  "smartctl": { "version": [7, 5], "exit_status": 0 },
+  "device": { "name": "/dev/nvme0", "info_name": "/dev/nvme0", "type": "nvme", "protocol": "NVMe" },
+  "model_name": "INTEL SSDPEKKF256G8",
+  "serial_number": "BTPY123456ABCDEF",
+  "firmware_version": "004C",
+  "user_capacity": { "blocks": 500118192, "bytes": 256060514304 },
+  "logical_block_size": 512,
+  "smart_status": { "passed": true },
+  "temperature": { "current": 41 },
+  "power_on_time": { "hours": 12345 },
+  "power_cycle_count": 1234,
+  "nvme_smart_health_information_log": {
+    "critical_warning": 0,
+    "temperature": 41,
+    "available_spare": 100,
+    "available_spare_threshold": 10,
+    "percentage_used": 3,
+    "data_units_read": 48828125,
+    "data_units_written": 12207031,
+    "host_reads": 900000,
+    "host_writes": 200000,
+    "power_cycles": 1234,
+    "power_on_hours": 12345,
+    "unsafe_shutdowns": 42,
+    "media_errors": 0,
+    "num_err_log_entries": 7
+  },
+  "messages": [
+    { "string": "Available Spare: Threshold is not exceeded", "severity": "information" }
+  ]
+}

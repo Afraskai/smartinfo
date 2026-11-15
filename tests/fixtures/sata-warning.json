@@ -1,0 +1,22 @@
+{
+  "device": { "name": "/dev/sda", "info_name": "/dev/sda", "type": "sat", "protocol": "ATA" },
+  "model_name": "Samsung SSD 870 EVO 1TB",
+  "serial_number": "S6PNNX0T123456",
+  "firmware_version": "SVT02B6Q",
+  "user_capacity": { "blocks": 1953525168, "bytes": 1000204886016 },
+  "smart_status": { "passed": true },
+  "temperature": { "current": 28 },
+  "power_on_time": { "hours": 5000 },
+  "power_cycle_count": 800,
+  "ata_smart_attributes": {
+    "revision": 1,
+    "table": [
+      { "id": 5, "name": "Reallocated_Sector_Ct", "value": 100, "worst": 100, "thresh": 10, "when_failed": "", "raw": { "value": 0, "string": "0" } },
+      { "id": 9, "name": "Power_On_Hours", "value": 94, "worst": 94, "thresh": 0, "when_failed": "", "raw": { "value": 5000, "string": "5000" } },
+      { "id": 187, "name": "Reported_Uncorrect", "value": 100, "worst": 100, "thresh": 0, "when_failed": "", "raw": { "value": 0, "string": "0" } },
+      { "id": 194, "name": "Temperature_Celsius", "value": 72, "worst": 50, "thresh": 0, "when_failed": "", "raw": { "value": 28, "string": "28 (Min/Max 20/45)" } },
+      { "id": 197, "name": "Current_Pending_Sector", "value": 5, "worst": 5, "thresh": 0, "when_failed": "NOW", "raw": { "value": 8, "string": "8" } }
+    ]
+  },
+  "messages": []
+}

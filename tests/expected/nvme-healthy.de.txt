@@ -1,0 +1,18 @@
+
+/dev/test  INTEL SSDPEKKF256G8
+  Status              GUT
+  Kapazität          256.1 GB
+  Anschluss           NVMe
+  Firmware            004C
+  Seriennummer        BTPY123456ABCDEF
+  Temperatur          41 °C
+  Laufzeit            12345 h (1 Jahr, 149 Tage)
+  Einschaltungen      1234
+  Abnutzung           3 % (Percentage Used)
+  Reserve             100 % (Schwelle 10 %)
+  Gelesen             25.0 TB
+  Geschrieben         6.2 TB
+  Unsichere Stopps    42
+  Media Errors        0
+  Fehler-Log          7
+  ! Available Spare: Threshold is not exceeded

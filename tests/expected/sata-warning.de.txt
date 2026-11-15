@@ -1,0 +1,16 @@
+
+/dev/test  Samsung SSD 870 EVO 1TB
+  Status              GUT
+  Kapazität          1.0 TB
+  Anschluss           ATA
+  Firmware            SVT02B6Q
+  Seriennummer        S6PNNX0T123456
+  Temperatur          28 °C
+  Laufzeit            5000 h (208 Tage)
+  Einschaltungen      800
+  ID   Attribut                        VAL WORST  THR  Rohwert
+  5    Reallocated_Sector_Ct           100   100   10  0
+  9    Power_On_Hours                   94    94    0  5000
+  187  Reported_Uncorrect              100   100    0  0
+  194  Temperature_Celsius              72    50    0  28 (Min/Max 20/45)
+  197  Current_Pending_Sector            5     5    0  8

@@ -1,0 +1,29 @@
+{
+  "device": { "name": "/dev/nvme1", "info_name": "/dev/nvme1", "type": "nvme", "protocol": "NVMe" },
+  "model_name": "Samsung SSD 980 PRO 1TB",
+  "serial_number": "S5GXNX0T999999",
+  "firmware_version": "5B2QGXA7",
+  "user_capacity": { "blocks": 1953525168, "bytes": 1000204886016 },
+  "smart_status": { "passed": false },
+  "temperature": { "current": 64 },
+  "power_on_time": { "hours": 24000 },
+  "power_cycle_count": 999,
+  "nvme_smart_health_information_log": {
+    "critical_warning": 4,
+    "temperature": 64,
+    "available_spare": 4,
+    "available_spare_threshold": 10,
+    "percentage_used": 96,
+    "data_units_read": 97656250,
+    "data_units_written": 195312500,
+    "power_cycles": 999,
+    "power_on_hours": 24000,
+    "unsafe_shutdowns": 321,
+    "media_errors": 12,
+    "num_err_log_entries": 88
+  },
+  "messages": [
+    { "string": "Available Spare is below threshold", "severity": "error" },
+    { "string": "Media and Data Integrity Errors: 12", "severity": "error" }
+  ]
+}

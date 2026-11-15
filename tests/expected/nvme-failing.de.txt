@@ -1,0 +1,19 @@
+
+/dev/test  Samsung SSD 980 PRO 1TB
+  Status              WARNUNG (Critical Warning: 4)
+  Kapazität          1.0 TB
+  Anschluss           NVMe
+  Firmware            5B2QGXA7
+  Seriennummer        S5GXNX0T999999
+  Temperatur          64 °C
+  Laufzeit            24000 h (2 Jahre, 270 Tage)
+  Einschaltungen      999
+  Abnutzung           96 % (Percentage Used)
+  Reserve             4 % (Schwelle 10 %)
+  Gelesen             50.0 TB
+  Geschrieben         100.0 TB
+  Unsichere Stopps    321
+  Media Errors        12
+  Fehler-Log          88
+  ! Available Spare is below threshold
+  ! Media and Data Integrity Errors: 12

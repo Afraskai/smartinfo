@@ -1,0 +1,18 @@
+
+/dev/test  INTEL SSDPEKKF256G8
+  Status              GOOD
+  Capacity            256.1 GB
+  Interface           NVMe
+  Firmware            004C
+  Serial              BTPY123456ABCDEF
+  Temperature         41 °C
+  Power-on time       12345 h (1 year, 149 days)
+  Power cycles        1234
+  Wear                3 % (percentage used)
+  Spare               100 % (threshold 10 %)
+  Read                25.0 TB
+  Written             6.2 TB
+  Unsafe shutdowns    42
+  Media errors        0
+  Error log           7
+  ! Available Spare: Threshold is not exceeded

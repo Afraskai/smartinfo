@@ -1,0 +1,447 @@
+#!/usr/bin/env bash
+# smartinfo - SMART-Daten uebersichtlich im Terminal
+#
+# Ein kleines Frontend für smartctl (smartmontools) im Stil von
+# CrystalDiskInfo / QDiskInfo - nur ohne GUI.
+#
+# Autor:  Florre
+# Lizenz: MIT (siehe LICENSE)
+# Projekt: https://github.com/Afraskai/smartinfo
+
+VERSION="1.0.0"
+
+set -uo pipefail
+
+# ---------------------------------------------------------------------------
+# Farben
+# ---------------------------------------------------------------------------
+
+if [[ -t 1 && -z ${NO_COLOR:-} && ${TERM:-dumb} != dumb && ${SMARTINFO_COLOR:-auto} != never ]]; then
+    BOLD=$'\033[1m'; DIM=$'\033[2m'; NC=$'\033[0m'
+    GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RED=$'\033[31m'; CYAN=$'\033[36m'
+else
+    BOLD=''; DIM=''; NC=''; GREEN=''; YELLOW=''; RED=''; CYAN=''
+fi
+
+# ---------------------------------------------------------------------------
+# Sprache (Deutsch/Englisch) - automatisch aus der Locale
+# ---------------------------------------------------------------------------
+
+declare -A T=()
+
+set_lang() {
+    case $1 in
+        de)
+            UI_LANG=de
+            T=(
+                [status]='Status' [capacity]='Kapazität' [interface]='Anschluss'
+                [firmware]='Firmware' [serial]='Seriennummer' [temperature]='Temperatur'
+                [power_on]='Laufzeit' [power_cycles]='Einschaltungen'
+                [wear]='Abnutzung' [spare]='Reserve' [read]='Gelesen'
+                [written]='Geschrieben' [unsafe]='Unsichere Stopps'
+                [media]='Media Errors' [errlog]='Fehler-Log'
+                [ok]='GUT' [fail]='FEHLER' [unknown]='UNBEKANNT'
+                [critical]='WARNUNG (Critical Warning: %s)'
+                [id]='ID' [attribute]='Attribut' [value]='VAL' [worst]='WORST'
+                [threshold]='THR' [raw]='Rohwert'
+                [spare_threshold]='Schwelle %s %%'
+                [wear_note]='Percentage Used'
+                [year]='Jahr' [years]='Jahre' [day]='Tag' [days]='Tage'
+                [missing_arg]='Option %s braucht einen Wert'
+                [root_hint]='sudo/doas nicht gefunden'
+                [no_disks]='Keine Festplatten gefunden.'
+                [cannot_read]='Konnte %s nicht lesen.'
+                [need_root]='SMART-Daten brauchen Root-Rechte:'
+                [cancelled]='Abgebrochen.'
+                [no_smartctl]='smartctl fehlt. Bitte smartmontools installieren:'
+                [no_jq]='jq fehlt. Bitte jq installieren:'
+                [no_lsblk]='lsblk fehlt (util-linux). Bitte installieren oder Gerät angeben.'
+                [unknown_opt]='Unbekannte Option: %s'
+                [usage]='Aufruf'
+            )
+            ;;
+        *)
+            UI_LANG=en
+            T=(
+                [status]='Status' [capacity]='Capacity' [interface]='Interface'
+                [firmware]='Firmware' [serial]='Serial' [temperature]='Temperature'
+                [power_on]='Power-on time' [power_cycles]='Power cycles'
+                [wear]='Wear' [spare]='Spare' [read]='Read'
+                [written]='Written' [unsafe]='Unsafe shutdowns'
+                [media]='Media errors' [errlog]='Error log'
+                [ok]='GOOD' [fail]='FAILED' [unknown]='UNKNOWN'
+                [critical]='WARNING (critical warning: %s)'
+                [id]='ID' [attribute]='Attribute' [value]='VAL' [worst]='WORST'
+                [threshold]='THR' [raw]='Raw value'
+                [spare_threshold]='threshold %s %%'
+                [wear_note]='percentage used'
+                [year]='year' [years]='years' [day]='day' [days]='days'
+                [missing_arg]='option %s needs a value'
+                [root_hint]='sudo/doas not found'
+                [no_disks]='No disks found.'
+                [cannot_read]='Could not read %s.'
+                [need_root]='SMART data requires root privileges:'
+                [cancelled]='Cancelled.'
+                [no_smartctl]='smartctl is missing. Please install smartmontools:'
+                [no_jq]='jq is missing. Please install jq:'
+                [no_lsblk]='lsblk is missing (util-linux). Please install it or pass a device.'
+                [unknown_opt]='Unknown option: %s'
+                [usage]='Usage'
+            )
+            ;;
+    esac
+}
+
+auto_lang() {
+    case ${SMARTINFO_LANG:-${LC_ALL:-${LANG:-}}} in
+        de*) echo de ;;
+        *)   echo en ;;
+    esac
+}
+
+# Standardsprache schon beim Laden setzen (wichtig für Tests/sourcing)
+set_lang "$(auto_lang)"
+
+t() { printf '%s' "${T[$1]}"; }
+
+# fmt KEY [WERT] - Text mit einem Platzhalter (%s) fuellen
+fmt() {
+    local text=${T[$1]:-$1}
+    text=${text//%s/${2:-}}
+    printf '%s' "${text//%%/%}"
+}
+
+usage() {
+    if [[ $UI_LANG == de ]]; then
+        cat <<EOF
+${BOLD}smartinfo $VERSION${NC} - SMART-Daten uebersichtlich im Terminal
+
+${BOLD}${T[usage]}${NC}
+  smartinfo [OPTIONEN] [GERAET...]
+
+Ohne Gerät werden alle Festplatten automatisch erkannt.
+Für die SMART-Daten wird einmalig sudo (Root) benötigt.
+
+${BOLD}Optionen${NC}
+  -q, --quiet          Kurzfassung ohne Attributtabelle
+  -l, --list           erkannte Laufwerke auflisten (ohne Root)
+  -j, --json           rohes smartctl-JSON ausgeben (für Skripte)
+  -d, --device=TYPE    smartctl -d TYPE, z. B. sat, nvme, megaraid,1
+      --lang=de|en     Sprache der Ausgabe (Default: aus \$LANG)
+      --no-color       keine Farben
+  -V, --version        Version anzeigen
+  -h, --help           diese Hilfe
+
+${BOLD}Beispiele${NC}
+  smartinfo                       # Übersicht aller Laufwerke
+  smartinfo /dev/nvme0n1          # nur dieses Laufwerk
+  smartinfo -q                    # nur Status/Health, keine Attribute
+  smartinfo -j /dev/sda | jq .    # JSON für eigene Auswertungen
+  smartinfo -d sat /dev/sdb       # USB-Gehäuse mit SAT-Bridge
+
+${BOLD}Umgebungsvariablen${NC}
+  NO_COLOR=1            Farben aus
+  SMARTINFO_LANG=en     Sprache erzwingen
+  SMARTINFO_SUDO=doas   anderes Root-Kommando statt sudo
+EOF
+    else
+        cat <<EOF
+${BOLD}smartinfo $VERSION${NC} - SMART data in a readable terminal overview
+
+${BOLD}${T[usage]}${NC}
+  smartinfo [OPTIONS] [DEVICE...]
+
+Without a device all disks are detected automatically.
+Reading SMART data needs root (sudo) once.
+
+${BOLD}Options${NC}
+  -q, --quiet          summary only, no attribute table
+  -l, --list           list detected disks (no root needed)
+  -j, --json           raw smartctl JSON output (for scripting)
+  -d, --device=TYPE    smartctl -d TYPE, e.g. sat, nvme, megaraid,1
+      --lang=de|en     output language (default: from \$LANG)
+      --no-color       disable colors
+  -V, --version        show version
+  -h, --help           this help
+
+${BOLD}Examples${NC}
+  smartinfo                       # overview of all disks
+  smartinfo /dev/nvme0n1          # this disk only
+  smartinfo -q                    # health summary only
+  smartinfo -j /dev/sda | jq .    # JSON for your own tooling
+  smartinfo -d sat /dev/sdb       # USB enclosures with SAT bridge
+
+${BOLD}Environment${NC}
+  NO_COLOR=1            disable colors
+  SMARTINFO_LANG=de     force language
+  SMARTINFO_SUDO=doas   use another root command instead of sudo
+EOF
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Hilfsfunktionen
+# ---------------------------------------------------------------------------
+
+die() { printf 'smartinfo: %s\n' "$*" >&2; exit 1; }
+
+install_hint() {
+    # $1 = Paketname (jq, smartmontools, util-linux)
+    printf '  Arch/CachyOS:  sudo pacman -S %s\n' "$1" >&2
+    printf '  Debian/Ubuntu: sudo apt install %s\n' "$1" >&2
+    printf '  Fedora:        sudo dnf install %s\n' "$1" >&2
+    printf '  openSUSE:      sudo zypper install %s\n' "$1" >&2
+}
+
+human_size() {
+    awk -v b="${1:-0}" 'BEGIN{
+        split("B KB MB GB TB PB", u, " "); i = 1
+        while (b >= 1000 && i < 6) { b /= 1000; i++ }
+        if (i <= 2) printf "%.0f %s", b, u[i]; else printf "%.1f %s", b, u[i]
+    }'
+}
+
+human_hours() {
+    local h=${1:-0} d=$(( ${1:-0} / 24 )) y=$(( ${1:-0} / 24 / 365 )) r=$(( (${1:-0} / 24) % 365 ))
+    local year_txt=${T[years]} day_txt=${T[days]}
+
+    if ((h < 48)); then
+        printf '%d h' "$h"
+        return
+    fi
+    ((y == 1)) && year_txt=${T[year]}
+    ((r == 1)) && day_txt=${T[day]}
+    if ((y > 0)); then
+        printf '%d h (%d %s, %d %s)' "$h" "$y" "$year_txt" "$r" "$day_txt"
+    else
+        printf '%d h (%d %s)' "$h" "$d" "$day_txt"
+    fi
+}
+
+row() { printf '  %s%-19s%s %s\n' "$DIM" "$1" "$NC" "$2"; }
+
+list_disks() {
+    command -v lsblk >/dev/null 2>&1 || die "${T[no_lsblk]}"
+    local found=0 name model size
+    while IFS=$'\t' read -r name model size; do
+        [[ -z $name ]] && continue
+        found=1
+        printf '%s  %-32s %s\n' "$name" "${model:-?}" "$size"
+    done < <(lsblk -dpno NAME,TYPE,MODEL,SIZE --json 2>/dev/null |
+             jq -r --arg skip '/dev/(zram|loop|ram|dm-|md|sr)' \
+                    '.blockdevices[]? | select(.type == "disk")
+                     | select(.name | test($skip) | not)
+                     | "\(.name)\t\(.model // "")\t\(.size)"' 2>/dev/null)
+    ((found)) || die "${T[no_disks]}"
+}
+
+# Gerätepfade aller echten Datenträger (ohne Partitionen, zram, loop, dm)
+discover_disks() {
+    command -v lsblk >/dev/null 2>&1 || die "${T[no_lsblk]}"
+    local name
+    while IFS= read -r name; do
+        [[ -z $name ]] && continue
+        [[ $name =~ /dev/(zram|loop|ram|dm-|md|sr) ]] && continue
+        printf '%s\n' "$name"
+    done < <(lsblk -dpno NAME,TYPE --json 2>/dev/null |
+             jq -r '.blockdevices[]? | select(.type == "disk") | .name' 2>/dev/null)
+}
+
+# ---------------------------------------------------------------------------
+# Ausgabe eines Laufwerks
+# ---------------------------------------------------------------------------
+
+render_device() {
+    local dev=$1 json=$2
+    local -A F=()
+
+    while IFS='=' read -r k v; do
+        [[ -n $k ]] && F["$k"]=$v
+    done < <(jq -r '
+        {
+          model:     (.model_name // .scsi_model_name // ""),
+          serial:    (.serial_number // ""),
+          fw:        (.firmware_version // .scsi_revision // ""),
+          proto:     (.device.protocol // .device.type // ""),
+          cap:       (.user_capacity.bytes // ""),
+          passed:    (.smart_status.passed // ""),
+          temp:      (.temperature.current // .nvme_smart_health_information_log.temperature // ""),
+          poh:       (.power_on_time.hours // ""),
+          pcyc:      (.power_cycle_count // ""),
+          crit:      (.nvme_smart_health_information_log.critical_warning // ""),
+          spare:     (.nvme_smart_health_information_log.available_spare // ""),
+          spare_thr: (.nvme_smart_health_information_log.available_spare_threshold // ""),
+          used:      (.nvme_smart_health_information_log.percentage_used // ""),
+          rd:        (.nvme_smart_health_information_log.data_units_read // ""),
+          wr:        (.nvme_smart_health_information_log.data_units_written // ""),
+          unsafe:    (.nvme_smart_health_information_log.unsafe_shutdowns // ""),
+          media:     (.nvme_smart_health_information_log.media_errors // ""),
+          errlog:    (.nvme_smart_health_information_log.num_err_log_entries // "")
+        } | to_entries[] | "\(.key)=\(.value|tostring)"
+    ' <<<"$json" 2>/dev/null)
+
+    local cap='' status status_color
+    [[ -n ${F[cap]:-} ]] && cap=$(human_size "${F[cap]}")
+
+    printf '\n%s%s%s  %s%s%s\n' "$BOLD$CYAN" "$dev" "$NC" "$BOLD" "${F[model]:-?}" "$NC"
+
+    if [[ ${F[passed]:-} == true ]]; then
+        status=${T[ok]}; status_color=$GREEN
+    elif [[ ${F[passed]:-} == false ]]; then
+        status=${T[fail]}; status_color=$RED
+    else
+        status=${T[unknown]}; status_color=$YELLOW
+    fi
+    if [[ -n ${F[crit]:-} && ${F[crit]} != 0 ]]; then
+        status=$(fmt critical "${F[crit]}")
+        status_color=$YELLOW
+    fi
+
+    row "${T[status]}" "${status_color}${status}${NC}"
+    [[ -n $cap ]] && row "${T[capacity]}" "$cap"
+    [[ -n ${F[proto]:-} ]] && row "${T[interface]}" "${F[proto]}"
+    [[ -n ${F[fw]:-} ]] && row "${T[firmware]}" "${F[fw]}"
+    [[ -n ${F[serial]:-} ]] && row "${T[serial]}" "${F[serial]}"
+
+    if [[ -n ${F[temp]:-} ]]; then
+        local tc=$GREEN
+        (( F[temp] >= 60 )) && tc=$RED
+        (( F[temp] >= 50 && F[temp] < 60 )) && tc=$YELLOW
+        row "${T[temperature]}" "${tc}${F[temp]} °C${NC}"
+    fi
+
+    [[ -n ${F[poh]:-} ]] && row "${T[power_on]}" "$(human_hours "${F[poh]}")"
+    [[ -n ${F[pcyc]:-} ]] && row "${T[power_cycles]}" "${F[pcyc]}"
+
+    if [[ -n ${F[rd]:-} ]]; then   # NVMe
+        local uc=$GREEN
+        (( ${F[used]:-0} >= 90 )) && uc=$RED
+        (( ${F[used]:-0} >= 70 && ${F[used]:-0} < 90 )) && uc=$YELLOW
+
+        row "${T[wear]}" "${uc}${F[used]:-0} %${NC} (${T[wear_note]})"
+        row "${T[spare]}" "${F[spare]:-?} % ($(fmt spare_threshold "${F[spare_thr]:-?}"))"
+        row "${T[read]}" "$(human_size $(( F[rd] * 512000 )))"
+        row "${T[written]}" "$(human_size $(( ${F[wr]:-0} * 512000 )))"
+        row "${T[unsafe]}" "${F[unsafe]:-0}"
+        row "${T[media]}" "${F[media]:-0}"
+        row "${T[errlog]}" "${F[errlog]:-0}"
+    fi
+
+    local msg
+    while IFS= read -r msg; do
+        [[ -n $msg ]] && printf '  %s! %s%s\n' "$YELLOW" "$msg" "$NC"
+    done < <(jq -r '.messages[]?.string // empty' <<<"$json" 2>/dev/null)
+
+    if [[ ${QUIET:-0} -eq 0 ]] && jq -e '.ata_smart_attributes.table' >/dev/null 2>&1 <<<"$json"; then
+        printf '  %s%-4s %-30s %4s %5s %4s  %s%s\n' "$BOLD" \
+            "${T[id]}" "${T[attribute]}" "${T[value]}" "${T[worst]}" "${T[threshold]}" "${T[raw]}" "$NC"
+        jq -r '.ata_smart_attributes.table[]
+               | [ (.id|tostring), .name, (.value|tostring), (.worst|tostring),
+                   (.thresh|tostring), (.raw.string // (.raw.value|tostring)),
+                   (.when_failed // "") ] | @tsv' <<<"$json" 2>/dev/null |
+        while IFS=$'\t' read -r id name val worst thr raw failed; do
+            local color=''
+            if [[ -n $failed ]]; then
+                color=$RED
+            elif [[ ${thr:-0} -gt 0 && ${val:-0} -le ${thr:-0} ]]; then
+                color=$YELLOW
+            fi
+            printf '  %s%-4s %-30.30s %4s %5s %4s  %s%s\n' "$color" \
+                "$id" "$name" "$val" "$worst" "$thr" "$raw" "$NC"
+        done
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Hauptprogramm
+# ---------------------------------------------------------------------------
+
+main() {
+    QUIET=0
+    JSON_OUT=0
+    LIST_ONLY=0
+    DEVICE_TYPE=''
+    local -a devs=()
+
+    set_lang "$(auto_lang)"
+
+    while (($#)); do
+        case $1 in
+            -q|--quiet)   QUIET=1; shift ;;
+            -j|--json)    JSON_OUT=1; shift ;;
+            -l|--list)    LIST_ONLY=1; shift ;;
+            -d|--device)  [[ $# -ge 2 ]] || die "$(fmt missing_arg "-d")"
+                          DEVICE_TYPE=$2; shift 2 ;;
+            --device=*)   DEVICE_TYPE=${1#*=}; shift ;;
+            --lang)       [[ $# -ge 2 ]] || die "$(fmt missing_arg "--lang")"
+                          set_lang "$2"; shift 2 ;;
+            --lang=*)     set_lang "${1#*=}"; shift ;;
+            --no-color)   BOLD=''; DIM=''; NC=''; GREEN=''; YELLOW=''; RED=''; CYAN=''; shift ;;
+            -V|--version) printf 'smartinfo %s\n' "$VERSION"; return 0 ;;
+            -h|--help)    usage; return 0 ;;
+            -*)           die "$(fmt unknown_opt "$1")" ;;
+            *)            devs+=("$1"); shift ;;
+        esac
+    done
+
+    if ((LIST_ONLY)); then
+        list_disks
+        return 0
+    fi
+
+    command -v smartctl >/dev/null 2>&1 || { printf '%s\n' "${T[no_smartctl]}" >&2; install_hint smartmontools; exit 1; }
+    command -v jq >/dev/null 2>&1 || { printf '%s\n' "${T[no_jq]}" >&2; install_hint jq; exit 1; }
+
+    if ((${#devs[@]} == 0)); then
+        mapfile -t devs < <(discover_disks)
+        ((${#devs[@]})) || die "${T[no_disks]}"
+    fi
+
+    # Root-Rechte: einmal Passwort, dann für alle Laufwerke nutzen
+    local -a runner=()
+    if ((EUID != 0)); then
+        local sudo_cmd=${SMARTINFO_SUDO:-}
+        if [[ -z $sudo_cmd ]]; then
+            if command -v sudo >/dev/null 2>&1; then
+                sudo_cmd=sudo
+            elif command -v doas >/dev/null 2>&1; then
+                sudo_cmd=doas
+            else
+                die "${T[need_root]} (sudo/doas not found)"
+            fi
+        fi
+        # Wortweise, damit SMARTINFO_SUDO='sudo -A' funktioniert
+        read -r -a runner <<<"$sudo_cmd"
+        if [[ ${runner[0]} == sudo ]]; then
+            if ! sudo -n true 2>/dev/null; then
+                printf '%s\n' "${T[need_root]}" >&2
+                sudo -v || die "${T[cancelled]}"
+            fi
+        fi
+    fi
+
+    local -a extra=()
+    [[ -n $DEVICE_TYPE ]] && extra=(-d "$DEVICE_TYPE")
+
+    local dev json rc=0
+    for dev in "${devs[@]}"; do
+        json=$("${runner[@]}" smartctl -x --json "${extra[@]}" "$dev" 2>/dev/null)
+        if [[ -z $json ]] || ! jq -e . >/dev/null 2>&1 <<<"$json"; then
+            printf 'smartinfo: %s\n' "$(fmt cannot_read "$dev")" >&2
+            rc=1
+            continue
+        fi
+        if ((JSON_OUT)); then
+            printf '%s\n' "$json"
+        else
+            render_device "$dev" "$json"
+        fi
+    done
+
+    ((JSON_OUT)) || printf '\n'
+    return $rc
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi
