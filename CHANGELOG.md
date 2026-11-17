@@ -8,6 +8,10 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Geändert
 
+- Englisch ist jetzt die Standardsprache der README: `README.md` enthält die englische
+  Fassung, die deutsche liegt in `README.de.md`. Beide beginnen mit einem
+  Sprachumschalter (Flaggen); `README.en.md` verweist als Stub auf `README.md`, damit
+  ältere Links gültig bleiben
 - NVMe-`Critical Warning` wird nicht mehr als Rohwert („Critical Warning: 4") angezeigt,
   sondern Bit für Bit benannt: Reserve, Temperatur, Zuverlässigkeit, Schreibschutz,
   Puffer-Backup. Abnutzung über der Nennlebensdauer erhält einen eigenen Hinweis

@@ -1,39 +1,40 @@
 # smartinfo
 
-[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue.svg)](LICENSE)
+🇬🇧 **English** · [🇩🇪 Deutsch](README.de.md)
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Bash](https://img.shields.io/badge/bash-4%2B-4EAA25?logo=gnubash&logoColor=white)
 
-**SMART-Werte deiner Festplatten im Terminal – wie CrystalDiskInfo bzw. QDiskInfo, nur ohne GUI.**
+**SMART data for your disks in the terminal – like CrystalDiskInfo / QDiskInfo, without the GUI.**
 
-Ein Ein-Datei-Skript. Kein Build, kein Qt, keine Installation von 200 MB Bibliotheken.
-Es liest die Daten mit `smartctl` (smartmontools) und zeigt sie als kompakte Übersicht:
-Health-Status, Temperatur, Laufzeit, Abnutzung und – bei SATA-Platten – die komplette
-Attributtabelle mit Warnfarben.
+A single bash script. No build step, no Qt, no 200 MB of libraries. It reads the data
+with `smartctl` (smartmontools) and prints a compact overview: health status, temperature,
+power-on time, wear and – for SATA drives – the full attribute table with warning colors.
 
 ```
 /dev/nvme0n1  INTEL SSDPEKKF256G8
-  Status              GUT
-  Kapazität          256.1 GB
-  Anschluss           NVMe
+  Status              GOOD
+  Capacity            256.1 GB
+  Interface           NVMe
   Firmware            004C
-  Seriennummer        BTPY123456ABCDEF
-  Temperatur          41 °C
-  Laufzeit            12345 h (1 Jahr, 149 Tage)
-  Einschaltungen      1234
-  Abnutzung           3 % (Percentage Used)
-  Reserve             100 % (Schwelle 10 %)
-  Gelesen             25.0 TB
-  Geschrieben         6.2 TB
-  Unsichere Stopps    42
-  Media Errors        0
-  Fehler-Log          7
+  Serial              BTPY123456ABCDEF
+  Temperature         41 °C
+  Power-on time       12345 h (1 year, 149 days)
+  Power cycles        1234
+  Wear                3 % (percentage used)
+  Spare               100 % (threshold 10 %)
+  Read                25.0 TB
+  Written             6.2 TB
+  Unsafe shutdowns    42
+  Media errors        0
+  Error log           7
 ```
 
 ---
 
-## Installation
+## Install
 
-### Variante 1: zwei Zeilen (empfohlen)
+### One-liner (recommended)
 
 ```bash
 mkdir -p ~/.local/bin
@@ -41,177 +42,151 @@ curl -fsSL https://raw.githubusercontent.com/Afraskai/smartinfo/main/smartinfo \
   -o ~/.local/bin/smartinfo && chmod +x ~/.local/bin/smartinfo
 ```
 
-`mkdir -p` gehört dazu: `curl -o` legt keine Verzeichnisse an. Fehlt `~/.local/bin`,
-bricht der Download mit `curl: (23) client returned ERROR on write` ab.
+The `mkdir -p` matters: `curl -o` does not create directories. If `~/.local/bin` is
+missing, the download fails with `curl: (23) client returned ERROR on write`.
 
-`~/.local/bin` ist bei den meisten Distributionen bereits im `PATH`.
-Falls nicht: `export PATH="$HOME/.local/bin:$PATH"` in die `~/.bashrc` / `~/.zshrc`.
+`~/.local/bin` is in `PATH` on most distributions. If not, add
+`export PATH="$HOME/.local/bin:$PATH"` to your `~/.bashrc` / `~/.zshrc`.
 
-**Auf Servern** (Proxmox, Debian/Ubuntu als `root`) ist `~/.local/bin` meist **nicht**
-im `PATH`. Dort direkt nach `/usr/local/bin` installieren:
+**On servers** (Proxmox, Debian/Ubuntu as `root`), `~/.local/bin` is usually **not** in
+`PATH`. Install to `/usr/local/bin` directly instead:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Afraskai/smartinfo/main/smartinfo \
   -o /usr/local/bin/smartinfo && chmod +x /usr/local/bin/smartinfo
 ```
 
-Alternativ Variante 2 mit `--system` – der Installer legt alle Verzeichnisse selbst an.
+Or use the installer with `--system` (option 2) – it creates the directories itself.
 
-### Variante 2: mit Installer
+### With the installer
 
 ```bash
 git clone https://github.com/Afraskai/smartinfo.git
 cd smartinfo
-./install.sh              # nach ~/.local/bin
-./install.sh --system     # nach /usr/local/bin (mit sudo)
+./install.sh              # to ~/.local/bin
+./install.sh --system     # to /usr/local/bin (sudo)
 ```
 
-Der Installer prüft auch, ob `smartctl`, `jq` und `lsblk` vorhanden sind.
-
-### Variante 3: klassisch
+### Classic
 
 ```bash
 git clone https://github.com/Afraskai/smartinfo.git
 cd smartinfo
 sudo make install         # PREFIX=/usr/local
-make install              # oder nach ~/.local
+make install              # or to ~/.local
 ```
 
-### Abhängigkeiten
+### Dependencies
 
-| Programm | Paket | Wofür |
+| Program | Package | Purpose |
 |---|---|---|
-| `smartctl` | `smartmontools` | liefert die SMART-Daten |
-| `jq` | `jq` | JSON-Auswertung |
-| `lsblk` | `util-linux` | Laufwerke finden (fast überall dabei) |
+| `smartctl` | `smartmontools` | provides the SMART data |
+| `jq` | `jq` | JSON parsing |
+| `lsblk` | `util-linux` | disk discovery (usually preinstalled) |
 
 ```bash
-# Arch / CachyOS / Manjaro
-sudo pacman -S smartmontools jq
-# Debian / Ubuntu / Mint
-sudo apt install smartmontools jq
-# Fedora
-sudo dnf install smartmontools jq
+sudo pacman -S smartmontools jq   # Arch / CachyOS / Manjaro
+sudo apt install smartmontools jq # Debian / Ubuntu / Mint
+sudo dnf install smartmontools jq # Fedora
 ```
 
 ---
 
-## Benutzung
+## Usage
 
 ```bash
-smartinfo                       # alle Laufwerke
-smartinfo /dev/nvme0n1          # nur dieses Laufwerk
-smartinfo -q                    # Kurzfassung ohne Attributtabelle
-smartinfo -l                    # erkannte Laufwerke auflisten (ohne Root)
+smartinfo                       # all disks
+smartinfo /dev/nvme0n1          # a single disk
+smartinfo -q                    # summary only, no attribute table
+smartinfo -l                    # list detected disks (no root)
 ```
 
-| Option | Bedeutung |
+| Option | Meaning |
 |---|---|
-| `-q`, `--quiet` | nur Status/Health, keine Attributtabelle |
-| `-l`, `--list` | erkannte Datenträger anzeigen, ohne Root |
-| `-j`, `--json` | rohes `smartctl`-JSON ausgeben (für Skripte) |
-| `-d`, `--device=TYPE` | `smartctl -d TYPE`, z. B. `sat` für USB-Gehäuse |
-| `--lang=de\|en` | Sprache der Ausgabe (Default aus `$LANG`) |
-| `--no-color` | Farben aus |
-| `-V`, `--version` | Version |
-| `-h`, `--help` | Hilfe |
+| `-q`, `--quiet` | health summary only |
+| `-l`, `--list` | list detected disks, no root needed |
+| `-j`, `--json` | raw `smartctl` JSON (for scripting) |
+| `-d`, `--device=TYPE` | `smartctl -d TYPE`, e.g. `sat` for USB enclosures |
+| `--lang=de\|en` | output language (default from `$LANG`) |
+| `--no-color` | disable colors |
+| `-V`, `--version` | version |
+| `-h`, `--help` | help |
 
-### Beispiele
+### Examples
 
 ```bash
-# Nur die wichtigsten Werte, gut für Screenshots oder Monitoring
-smartinfo -q
-
-# JSON weiterverarbeiten
-smartinfo -j /dev/nvme0n1 | jq '.nvme_smart_health_information_log.percentage_used'
-
-# USB-Festplatte hinter einer SAT-Bridge
-smartinfo -d sat /dev/sdb
-
-# Temperatur aller Platten in einer Zeile
-for d in /dev/sd? /dev/nvme?n1; do
-    [ -e "$d" ] && smartinfo -j "$d" | jq -r --arg d "$d" '"\($d): \(.temperature.current) °C"'
-done
+smartinfo -q                                     # the important bits only
+smartinfo -j /dev/nvme0n1 | jq '.temperature'    # JSON for your own tooling
+smartinfo -d sat /dev/sdb                        # USB drive behind a SAT bridge
 ```
 
-### Farben
+### Colors
 
-- **grün** – alles gut
-- **gelb** – Warnung (Temperatur ≥ 50 °C, Abnutzung ≥ 70 %, Attribut nahe Schwelle)
-- **rot** – kritisch (SMART-Status *FAILED*, Temperatur ≥ 60 °C, Abnutzung ≥ 90 %, Attribut fehlgeschlagen)
-
-### JSON-Modus
-
-`smartinfo -j` gibt exakt die JSON-Struktur von `smartctl -x --json` aus. Damit kannst du
-alles weiterverarbeiten, was die Anzeige verwendet – z. B. in Prometheus-Exporter, Skripten
-oder einer eigenen GUI.
+- **green** – fine
+- **yellow** – warning (≥ 50 °C, wear ≥ 70 %, attribute near threshold)
+- **red** – critical (SMART *FAILED*, ≥ 60 °C, wear ≥ 90 %, failed attribute)
 
 ---
 
-## Warum sudo?
+## Why sudo?
 
-SMART-Daten sind Hardware-Informationen, die der Kernel nur mit Root-Rechten herausgibt.
-`smartinfo` ruft deshalb – genau wie QDiskInfo – `smartctl` per `sudo` auf. Du wirst
-**einmal** nach dem Passwort gefragt, danach gilt es für alle Laufwerke des Aufrufs.
+SMART data is hardware information the kernel only exposes to root. Like QDiskInfo,
+`smartinfo` calls `smartctl` through `sudo`, asking for your password **once** per run.
 
-Das Skript selbst läuft ohne Root, führt keine Schreibzugriffe aus und öffnet keine
-Netzwerkverbindungen. Es liest ausschließlich `smartctl`-Ausgaben.
-
-Wer kein `sudo` mag:
+The script itself does not run as root, performs no writes and makes no network
+connections. It only reads `smartctl` output.
 
 ```bash
-SMARTINFO_SUDO=doas smartinfo
+SMARTINFO_SUDO=doas smartinfo   # if you prefer doas
 ```
 
 ---
 
-## Problembehandlung
+## Troubleshooting
 
-| Problem | Lösung |
+| Problem | Fix |
 |---|---|
-| `curl: (23) … ERROR on write` | Zielverzeichnis fehlt → `mkdir -p ~/.local/bin`, danach erneut herunterladen |
-| `smartinfo: command not found` nach `~/.local/bin`-Installation | Verzeichnis nicht im `PATH` (typisch als `root`) → nach `/usr/local/bin` installieren oder `PATH` ergänzen |
-| `Konnte /dev/sdX nicht lesen` | Rechte fehlen → mit `sudo` ausführen oder `SMARTINFO_SUDO` setzen |
-| USB-Platte liefert keine Daten | `smartinfo -d sat /dev/sdb` (oder `-d usbjmicron`, `-d usbcypress`) |
-| „jq fehlt“ | `sudo pacman -S jq` / `sudo apt install jq` |
-| Keine Laufwerke gefunden | `lsblk` prüfen, ggf. Gerät direkt angeben |
-| NVMe zeigt keine Attribute | normal: NVMe hat kein ATA-Attributset, die Health-Werte stehen oben |
-| Englische Ausgabe gewünscht | `smartinfo --lang=en` oder `SMARTINFO_LANG=en` |
+| `curl: (23) … ERROR on write` | target directory missing → `mkdir -p ~/.local/bin`, then download again |
+| `smartinfo: command not found` after installing to `~/.local/bin` | directory not in `PATH` (typical for `root`) → install to `/usr/local/bin` or extend `PATH` |
+| `Could not read /dev/sdX` | missing privileges → run with sudo or set `SMARTINFO_SUDO` |
+| USB drive returns nothing | `smartinfo -d sat /dev/sdb` (also `usbjmicron`, `usbcypress`, …) |
+| “jq is missing” | `sudo pacman -S jq` / `sudo apt install jq` |
+| No disks found | check `lsblk`, or pass the device explicitly |
+| NVMe shows no attribute table | normal: NVMe has no ATA attribute set, health values are above |
+| German output wanted | `smartinfo --lang=de` or `SMARTINFO_LANG=de` |
 
 ---
 
-## Deinstallation
+## Uninstall
 
 ```bash
 ./install.sh --uninstall           # ~/.local/bin
-./install.sh --system --uninstall  # /usr/local/bin (mit sudo)
-make uninstall                     # Ziel aus dem Makefile, Default ~/.local
-rm ~/.local/bin/smartinfo          # von Hand
+./install.sh --system --uninstall  # /usr/local/bin (uses sudo)
+make uninstall                     # target from the Makefile, default ~/.local
+rm ~/.local/bin/smartinfo          # by hand
 ```
 
-Das Ziel muss zur Installation passen: wer mit `--system` installiert hat, muss
-`--system` auch beim Entfernen angeben. Der Installer weist darauf hin, wenn er
-das Programm an einer anderen Stelle findet.
+The target has to match the installation: if you installed with `--system`, pass
+`--system` when removing as well. The installer points out a copy it finds at a
+different location.
 
-Sonst bleibt nichts zurück: `smartinfo` legt keine Konfiguration, keinen Cache
-und keine systemd-Unit an.
+Nothing else is left behind: `smartinfo` creates no configuration, no cache and
+no systemd unit.
 
 ---
 
-## Entwicklung
+## Development
 
 ```bash
-make test      # Testsuite (ohne smartctl, ohne Root)
+make test      # test suite (no smartctl, no root)
 make lint      # shellcheck
-make check     # beides
+make check     # both
 ```
 
-Die Tests rendern feste JSON-Fixtures (`tests/fixtures/`) und vergleichen mit
-Referenzausgaben (`tests/expected/`) – so bleiben Formatierung und beide Sprachen stabil.
-CI läuft über Gitea Actions auf einem eigenen Runner (`.gitea/workflows/ci.yml`).
+Tests render fixed JSON fixtures (`tests/fixtures/`) and compare them against
+reference output (`tests/expected/`) so formatting and both languages stay stable.
+CI runs on Gitea Actions with a self-hosted runner (`.gitea/workflows/ci.yml`).
 
-## Lizenz
+## License
 
-MIT – siehe [LICENSE](LICENSE).
-
-Englische Dokumentation: [README.en.md](README.en.md)
+MIT – see [LICENSE](LICENSE).
